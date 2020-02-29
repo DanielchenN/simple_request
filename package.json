@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "main": "node.js",
   "author": "chenn",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "caseless": "^0.12.0"
+  }
 }
