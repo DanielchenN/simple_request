@@ -1,0 +1,7 @@
+{
+  "name": "request_node",
+  "version": "1.0.0",
+  "main": "node.js",
+  "author": "chenn",
+  "license": "MIT"
+}
