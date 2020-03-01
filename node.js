@@ -1,4 +1,4 @@
-const core = require('./core')
+const core = require('./index')
 const http = require('http')
 const https = require('https')
 const zlib = require('zlib')
@@ -22,7 +22,7 @@ const fromatRes = function(res) {
   return res.pipe(pt)
 }
 
-const getBuferr = (res) => new Promise((resolve, reject) => {
+const getBuffer = (res) => new Promise((resolve, reject) => {
   const arr = []
   res.on('data', (chunk) => {
     arr.push(chunk)
@@ -69,9 +69,10 @@ const request = (baseUrl = '', method, statusCodes, format, headers) => (_url = 
   }
 
   return new Promise((resolve, reject) => {
-    protocol.request(options, (res) => {
-      console.log(`状态码: ${res.statusCode}`)
-      console.log(`响应头: ${JSON.stringify(res.headers)}`)
+    const req = protocol.request(options, async (res) => {
+      // console.log(`状态码: ${res.statusCode}`)
+      // console.log(`响应头: ${JSON.stringify(res.headers)}`)
+
       // @TODO: 把res抛出去
       if(!statusCodes.has(res.statusCode)) reject(new Error('mismatch status code'))
 
@@ -79,9 +80,43 @@ const request = (baseUrl = '', method, statusCodes, format, headers) => (_url = 
       const response = fromatRes(res)
       if(!format) return resolve(response)
 
-      const buff = getBuferr(response)
+      const buff = await getBuffer(response)
       //然后要通过各种encoding的方式 对流做变换
-    }) 
-  })
+      if (format === 'string') {
+        return resolve(buff.toString())
+      } else if (format === 'json') {
+        try {
+          const out = JSON.parse(buff.toString())
+          resolve(out)
+        } catch(e) {
+          e.message += `error "${buff.toString()}"`
+          reject(e)
+        }
+      } else if(format === 'buffer') {
+        return resolve(buff)
+      }
 
+    })
+    
+    if (!body) req.end()
+    if (body) {
+      if (typeof body === 'string') {
+        body = Buffer.from(body)
+      } else if (typeof body === 'object') {
+        body = Buffer.from(JSON.stringify(body))
+      } else if (Buffer.isBuffer(body)) {
+
+      } else if (isStream(body)) {
+        body.pipe(req)
+        body = null
+      }
+    }
+
+    if(body) {
+      req.end(body)
+    }
+
+  })
 }
+
+module.exports = core(request)
