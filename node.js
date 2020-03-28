@@ -4,6 +4,7 @@ const https = require('https')
 const zlib = require('zlib')
 const { PassThrough } = require('stream')
 const caseless = require('caseless')
+const { isStream } = require('./utils')
 
 const compression = {
   gzip: zlib.createGunzip,
